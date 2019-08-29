@@ -6,7 +6,7 @@ use ckb_shared::error::SharedError;
 use ckb_traits::ChainProvider;
 use ckb_types::prelude::*;
 use ckb_types::{
-    core::{cell::UnresolvableError, BlockBuilder, BlockView},
+    core::{cell::UnresolvableError, header_digest::HeaderDigest, BlockBuilder, BlockView},
     packed::OutPoint,
     U256,
 };
@@ -19,8 +19,8 @@ fn test_dead_cell_in_same_block() {
     let switch_fork_number = 10;
 
     let mock_store = MockStore::new(&parent, shared.store());
-    let mut chain1 = MockChain::new(parent.clone(), shared.consensus());
-    let mut chain2 = MockChain::new(parent.clone(), shared.consensus());
+    let mut chain1 = MockChain::new(parent.clone(), shared.consensus(), Default::default());
+    let mut chain2 = MockChain::new(parent.clone(), shared.consensus(), Default::default());
 
     for _ in 1..final_number {
         chain1.gen_empty_block(100u64, &mock_store);
@@ -77,8 +77,8 @@ fn test_dead_cell_in_different_block() {
     let switch_fork_number = 10;
 
     let mock_store = MockStore::new(&parent, shared.store());
-    let mut chain1 = MockChain::new(parent.clone(), shared.consensus());
-    let mut chain2 = MockChain::new(parent.clone(), shared.consensus());
+    let mut chain1 = MockChain::new(parent.clone(), shared.consensus(), Default::default());
+    let mut chain2 = MockChain::new(parent.clone(), shared.consensus(), Default::default());
 
     for _ in 1..final_number {
         chain1.gen_empty_block(100u64, &mock_store);
@@ -134,8 +134,8 @@ fn test_invalid_out_point_index_in_same_block() {
     let switch_fork_number = 10;
 
     let mock_store = MockStore::new(&parent, shared.store());
-    let mut chain1 = MockChain::new(parent.clone(), shared.consensus());
-    let mut chain2 = MockChain::new(parent.clone(), shared.consensus());
+    let mut chain1 = MockChain::new(parent.clone(), shared.consensus(), Default::default());
+    let mut chain2 = MockChain::new(parent.clone(), shared.consensus(), Default::default());
 
     for _ in 1..final_number {
         chain1.gen_empty_block(100u64, &mock_store);
@@ -194,8 +194,8 @@ fn test_invalid_out_point_index_in_different_blocks() {
     let switch_fork_number = 10;
 
     let mock_store = MockStore::new(&parent, shared.store());
-    let mut chain1 = MockChain::new(parent.clone(), shared.consensus());
-    let mut chain2 = MockChain::new(parent.clone(), shared.consensus());
+    let mut chain1 = MockChain::new(parent.clone(), shared.consensus(), Default::default());
+    let mut chain2 = MockChain::new(parent.clone(), shared.consensus(), Default::default());
 
     for _ in 1..final_number {
         chain1.gen_empty_block(100u64, &mock_store);
@@ -250,6 +250,7 @@ fn test_invalid_out_point_index_in_different_blocks() {
 
 #[test]
 fn test_full_dead_transaction() {
+    use ckb_merkle_mountain_range::util::MemMMR;
     let (chain_controller, shared, mut parent) = start_chain(None);
     let final_number = 20;
     let switch_fork_number = 10;
@@ -257,6 +258,17 @@ fn test_full_dead_transaction() {
 
     let mut chain1: Vec<BlockView> = Vec::new();
     let mut chain2: Vec<BlockView> = Vec::new();
+
+    // initialize mmr for chain1 chain2
+    let mut chain1_mmr = MemMMR::<HeaderDigest>::default();
+    chain1_mmr
+        .push(parent.clone().into())
+        .expect("push block to mmr");
+
+    let mut chain2_mmr = MemMMR::<HeaderDigest>::default();
+    chain2_mmr
+        .push(parent.clone().into())
+        .expect("push block to mmr");
 
     let mock_store = MockStore::new(&parent, shared.store());
 
@@ -276,11 +288,18 @@ fn test_full_dead_transaction() {
         .number((parent.number() + 1).pack())
         .difficulty((difficulty + U256::from(100u64)).pack())
         .dao(dao)
+        .chain_root(chain1_mmr.get_root().expect("get root").data().hash())
         .transaction(cellbase_tx)
         .build();
 
     chain1.push(block.clone());
     chain2.push(block.clone());
+    chain1_mmr
+        .push(block.header().into())
+        .expect("push block to mmr");
+    chain2_mmr
+        .push(block.header().into())
+        .expect("push block to mmr");
     mock_store.insert_block(&block, shared.consensus().genesis_epoch_ext());
     let root_tx = &block.transactions()[0];
     let tx1 = create_multi_outputs_transaction(&root_tx, vec![0], 1, vec![1]);
@@ -288,6 +307,7 @@ fn test_full_dead_transaction() {
     parent = block.header().to_owned();
     for i in 2..switch_fork_number {
         let difficulty = parent.difficulty().to_owned();
+        let chain_root = chain1_mmr.get_root().expect("get root").data().hash();
         let new_block = if i == proposal_number {
             let transactions = vec![create_cellbase(&mock_store, shared.consensus(), &parent)];
             let dao = dao_data(
@@ -302,6 +322,7 @@ fn test_full_dead_transaction() {
                 .number((parent.number() + 1).pack())
                 .difficulty((difficulty + U256::from(100u64)).pack())
                 .dao(dao)
+                .chain_root(chain_root)
                 .transactions(transactions)
                 .proposals(vec![tx1.proposal_short_id()])
                 .build()
@@ -322,6 +343,7 @@ fn test_full_dead_transaction() {
                 .number((parent.number() + 1).pack())
                 .difficulty((difficulty + U256::from(100u64)).pack())
                 .dao(dao)
+                .chain_root(chain_root)
                 .transactions(transactions)
                 .build()
         } else {
@@ -338,11 +360,18 @@ fn test_full_dead_transaction() {
                 .number((parent.number() + 1).pack())
                 .difficulty((difficulty + U256::from(100u64)).pack())
                 .dao(dao)
+                .chain_root(chain_root)
                 .transactions(transactions)
                 .build()
         };
         chain1.push(new_block.clone());
         chain2.push(new_block.clone());
+        chain1_mmr
+            .push(new_block.header().into())
+            .expect("push block to mmr");
+        chain2_mmr
+            .push(new_block.header().into())
+            .expect("push block to mmr");
         mock_store.insert_block(&new_block, shared.consensus().genesis_epoch_ext());
         parent = new_block.header().to_owned();
     }
@@ -352,6 +381,7 @@ fn test_full_dead_transaction() {
 
     for i in switch_fork_number..final_number {
         let difficulty = parent.difficulty().to_owned();
+        let chain_root = chain1_mmr.get_root().expect("get root").data().hash();
         let new_block = if i == final_number - 3 {
             let transactions = vec![create_cellbase(&mock_store, shared.consensus(), &parent)];
             let dao = dao_data(
@@ -366,6 +396,7 @@ fn test_full_dead_transaction() {
                 .number((parent.number() + 1).pack())
                 .difficulty((difficulty + U256::from(100u64)).pack())
                 .dao(dao)
+                .chain_root(chain_root)
                 .transactions(transactions)
                 .proposals(vec![tx2.proposal_short_id(), tx3.proposal_short_id()])
                 .build()
@@ -387,6 +418,7 @@ fn test_full_dead_transaction() {
                 .number((parent.number() + 1).pack())
                 .difficulty((difficulty + U256::from(100u64)).pack())
                 .dao(dao)
+                .chain_root(chain_root)
                 .transactions(transactions)
                 .build()
         } else {
@@ -404,10 +436,14 @@ fn test_full_dead_transaction() {
                 .number((parent.number() + 1).pack())
                 .difficulty((difficulty + U256::from(100u64)).pack())
                 .dao(dao)
+                .chain_root(chain_root)
                 .transactions(transactions)
                 .build()
         };
         chain1.push(new_block.clone());
+        chain1_mmr
+            .push(new_block.header().into())
+            .expect("push block to chain1 mmr");
         mock_store.insert_block(&new_block, shared.consensus().genesis_epoch_ext());
         parent = new_block.header().to_owned();
     }
@@ -415,6 +451,7 @@ fn test_full_dead_transaction() {
     parent = chain2.last().unwrap().header().clone();
     for i in switch_fork_number..final_number {
         let difficulty = parent.difficulty().to_owned();
+        let chain_root = chain2_mmr.get_root().expect("get root").data().hash();
         let new_block = if i == final_number - 3 {
             let transactions = vec![create_cellbase(&mock_store, shared.consensus(), &parent)];
             let dao = dao_data(
@@ -429,6 +466,7 @@ fn test_full_dead_transaction() {
                 .number((parent.number() + 1).pack())
                 .difficulty((difficulty + U256::from(101u64)).pack())
                 .dao(dao)
+                .chain_root(chain_root)
                 .proposals(vec![tx2.proposal_short_id(), tx3.proposal_short_id()])
                 .transactions(transactions)
                 .build()
@@ -450,6 +488,7 @@ fn test_full_dead_transaction() {
                 .number((parent.number() + 1).pack())
                 .difficulty((difficulty + U256::from(101u64)).pack())
                 .dao(dao)
+                .chain_root(chain_root)
                 .transactions(transactions)
                 .build()
         } else {
@@ -467,10 +506,14 @@ fn test_full_dead_transaction() {
                 .number((parent.number() + 1).pack())
                 .difficulty((difficulty + U256::from(101u64)).pack())
                 .dao(dao)
+                .chain_root(chain_root)
                 .transactions(transactions)
                 .build()
         };
         chain2.push(new_block.clone());
+        chain2_mmr
+            .push(new_block.header().into())
+            .expect("push block to chain2 mmr");
         mock_store.insert_block(&new_block, shared.consensus().genesis_epoch_ext());
         parent = new_block.header().to_owned();
     }

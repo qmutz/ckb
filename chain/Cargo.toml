@@ -20,6 +20,7 @@ ckb-traits = { path = "../traits" }
 failure = "0.1.5"
 ckb-dao = { path = "../util/dao" }
 ckb-proposal-table = { path = "../util/proposal-table" }
+ckb-merkle-mountain-range = { path = "../util/merkle-mountain-range" }
 # DO NOT UPDATE "im", until clippy#4121 be solved
 # https://github.com/rust-lang/rust-clippy/issues/4121
 im = "~12.3"

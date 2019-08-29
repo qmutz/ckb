@@ -12,6 +12,8 @@ pub enum SharedError {
     InvalidData(String),
     #[fail(display = "InvalidBlock error: {}", _0)]
     InvalidBlock(String),
+    #[fail(display = "InvalidChainRoot error: {}", _0)]
+    InvalidChainRoot(String),
     #[fail(display = "DB error: {}", _0)]
     DB(DBError),
 }

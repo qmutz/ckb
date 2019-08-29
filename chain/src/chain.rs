@@ -329,6 +329,8 @@ impl ChainService {
             self.find_fork(&mut fork, current_tip_header.number(), &block, ext);
 
             self.rollback(&fork, &db_txn, &mut cell_set)?;
+            // update and verify chain root
+            self.update_chain_root_merkle_tree(&db_txn, fork.attached_blocks.iter(), need_verify)?;
             // MUST update index before reconcile_main_chain
             self.reconcile_main_chain(&db_txn, &mut fork, need_verify, &mut cell_set)?;
 
@@ -662,6 +664,52 @@ impl ChainService {
         } else {
             Ok(())
         }
+    }
+
+    pub(crate) fn update_chain_root_merkle_tree<'a>(
+        &'a self,
+        txn: &StoreTransaction,
+        mut attached_blocks: impl Iterator<Item = &'a BlockView>,
+        need_verify: bool,
+    ) -> Result<(), FailureError> {
+        use ckb_merkle_mountain_range::{leaf_index_to_mmr_size, MMRBatch, MMR};
+        let block = match attached_blocks.next() {
+            Some(b) => b,
+            None => return Ok(()),
+        };
+        let mut batch = MMRBatch::new(txn);
+        // calculate mmr_size and initialize MMR
+        let mmr_size = leaf_index_to_mmr_size(block.header().number() - 1);
+        let mut mmr = MMR::new(mmr_size, &mut batch);
+        let root = mmr.get_root()?;
+        let root_hash = root.data().hash();
+        // check first block chain_root
+        if need_verify && root_hash != block.header().chain_root() {
+            Err(SharedError::InvalidChainRoot(format!(
+                "mismatch chain_root, expect {} but got {}",
+                root_hash,
+                block.header().chain_root()
+            )))?;
+        }
+        // push to mmr
+        mmr.push(block.header().into())?;
+        // check blocks chain_root
+        for block in attached_blocks {
+            let root = mmr.get_root()?;
+            let root_hash = root.data().hash();
+
+            if need_verify && root_hash != block.header().chain_root() {
+                Err(SharedError::InvalidChainRoot(format!(
+                    "mismatch chain_root, expect {} but got {}",
+                    root_hash,
+                    block.header().chain_root()
+                )))?;
+            }
+            mmr.push(block.header().into())?;
+        }
+        // commit mmr changes
+        batch.commit()?;
+        Ok(())
     }
 
     // TODO: beatify

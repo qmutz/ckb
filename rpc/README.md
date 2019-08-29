@@ -94,6 +94,7 @@ http://localhost:8114
     "id": 2,
     "jsonrpc": "2.0",
     "result": {
+        "chain_root": "0x508fce0f4945323cba98c7cff8b26067959384e646acd530a1c7ea36a88d3d91",
         "dao": "0x0100000000000000005827f2ba13b000d77fa3d595aa00000061eb7ada030000",
         "difficulty": "0x7a1200",
         "epoch": "1",
@@ -243,6 +244,7 @@ http://localhost:8114
     "jsonrpc": "2.0",
     "result": {
         "header": {
+            "chain_root": "0x508fce0f4945323cba98c7cff8b26067959384e646acd530a1c7ea36a88d3d91",
             "dao": "0x0100000000000000005827f2ba13b000d77fa3d595aa00000061eb7ada030000",
             "difficulty": "0x7a1200",
             "epoch": "1",
@@ -328,6 +330,7 @@ http://localhost:8114
     "id": 2,
     "jsonrpc": "2.0",
     "result": {
+        "chain_root": "0x508fce0f4945323cba98c7cff8b26067959384e646acd530a1c7ea36a88d3d91",
         "dao": "0x0100000000000000005827f2ba13b000d77fa3d595aa00000061eb7ada030000",
         "difficulty": "0x7a1200",
         "epoch": "1",
@@ -372,6 +375,7 @@ http://localhost:8114
     "id": 2,
     "jsonrpc": "2.0",
     "result": {
+        "chain_root": "0x508fce0f4945323cba98c7cff8b26067959384e646acd530a1c7ea36a88d3d91",
         "dao": "0x0100000000000000005827f2ba13b000d77fa3d595aa00000061eb7ada030000",
         "difficulty": "0x7a1200",
         "epoch": "1",
@@ -1165,6 +1169,7 @@ http://localhost:8114
     "jsonrpc": "2.0",
     "result": {
         "header": {
+            "chain_root": "0x508fce0f4945323cba98c7cff8b26067959384e646acd530a1c7ea36a88d3d91",
             "dao": "0x0100000000000000005827f2ba13b000d77fa3d595aa00000061eb7ada030000",
             "difficulty": "0x7a1200",
             "epoch": "1",

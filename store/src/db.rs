@@ -7,6 +7,7 @@ use ckb_db::{
     iter::{DBIterator, DBIteratorItem},
     Col, DBPinnableSlice, Direction, Error, RocksDB,
 };
+use ckb_merkle_mountain_range::{MMRBatch, MMR};
 use ckb_types::{
     core::{BlockExt, TransactionMeta},
     packed,
@@ -111,6 +112,15 @@ impl ChainDB {
         }
 
         let last_block_hash_in_previous_epoch = epoch.last_block_hash_in_previous_epoch();
+
+        // Init MMR
+        let mut batch = MMRBatch::new(&db_txn);
+        let mut mmr = MMR::new(0, &mut batch);
+        mmr.push(genesis.header().into())
+            .map_err(|e| Error::DBError(format!("Failed to add genesis to MMR {}", e)))?;
+        batch
+            .commit()
+            .map_err(|e| Error::DBError(format!("Failed to commit MMR batch {}", e)))?;
 
         db_txn.insert_block(genesis)?;
         db_txn.insert_block_ext(&genesis_hash, &ext)?;
