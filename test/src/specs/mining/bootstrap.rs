@@ -25,13 +25,13 @@ impl Spec for BootstrapCellbase {
         let bootstrap_lock = packed::Script::new_builder()
             .args(vec![Bytes::from(vec![1]), Bytes::from(vec![2])].pack())
             .code_hash(h256!("0xa1").pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
 
         let miner = packed::Script::new_builder()
             .args(vec![Bytes::from(vec![2]), Bytes::from(vec![1])].pack())
             .code_hash(h256!("0xa2").pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
 
         let is_bootstrap_cellbase = |blk_hash: &packed::Byte32| {
@@ -74,7 +74,7 @@ impl Spec for BootstrapCellbase {
             spec_config.genesis.bootstrap_lock = packed::Script::new_builder()
                 .args(vec![Bytes::from(vec![1]), Bytes::from(vec![2])].pack())
                 .code_hash(h256!("0xa1").pack())
-                .hash_type(ScriptHashType::Data.pack())
+                .hash_type(ScriptHashType::Data.into())
                 .build()
                 .into();
         })

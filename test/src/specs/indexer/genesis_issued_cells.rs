@@ -25,7 +25,7 @@ impl Spec for GenesisIssuedCells {
                 // The second output's type_id script hash
                 h256!("0xa20df8e80518e9b2eabc1a0efb0ebe1de83f8df9c867edf99d0c5895654fcde1").pack(),
             )
-            .hash_type(ScriptHashType::Type.pack())
+            .hash_type(ScriptHashType::Type.into())
             .build()
             .calc_script_hash();
         info!("{}", lock_hash);
@@ -55,7 +55,7 @@ impl Spec for GenesisIssuedCells {
                         h256!("0xa20df8e80518e9b2eabc1a0efb0ebe1de83f8df9c867edf99d0c5895654fcde1")
                             .pack(),
                     )
-                    .hash_type(ScriptHashType::Type.pack())
+                    .hash_type(ScriptHashType::Type.into())
                     .build()
                     .into(),
             }];

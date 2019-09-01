@@ -270,7 +270,7 @@ mod tests {
                     .cell_dep(
                         CellDep::new_builder()
                             .out_point(always_success_out_point.to_owned())
-                            .dep_type(DepType::Code.pack())
+                            .dep_type(DepType::Code.into())
                             .build(),
                     )
                     .build()
@@ -321,7 +321,7 @@ mod tests {
                     .cell_dep(
                         CellDep::new_builder()
                             .out_point(always_success_out_point.to_owned())
-                            .dep_type(DepType::Code.pack())
+                            .dep_type(DepType::Code.into())
                             .build(),
                     )
                     .build()
@@ -391,7 +391,7 @@ mod tests {
                     .cell_dep(
                         CellDep::new_builder()
                             .out_point(always_success_out_point.to_owned())
-                            .dep_type(DepType::Code.pack())
+                            .dep_type(DepType::Code.into())
                             .build(),
                     )
                     .build()

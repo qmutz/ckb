@@ -29,6 +29,7 @@ use ckb_types::{
 };
 use serde_derive::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
+use std::convert::TryFrom;
 use std::error::Error;
 use std::fmt;
 use std::sync::Arc;
@@ -247,7 +248,7 @@ impl Genesis {
             .flat_map(|tx| tx.outputs().into_iter().map(|output| output.lock()))
             .filter(|lock_script| lock_script != &genesis_cell_lock)
         {
-            match lock_script.hash_type().unpack() {
+            match ScriptHashType::try_from(lock_script.hash_type()).expect("checked data") {
                 ScriptHashType::Data => {
                     if !data_hashes.contains(&lock_script.code_hash()) {
                         return Err(format!(
@@ -309,7 +310,7 @@ impl Genesis {
         let special_issued_lock = packed::Script::new_builder()
             .args(vec![secp_lock_arg(&Privkey::from(SPECIAL_CELL_PRIVKEY.clone()))].pack())
             .code_hash(CODE_HASH_SECP256K1_BLAKE160_SIGHASH_ALL.clone().pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
         let special_issued_cell = packed::CellOutput::new_builder()
             .capacity(SPECIAL_CELL_CAPACITY.pack())
@@ -478,7 +479,7 @@ impl SystemCell {
             let script_arg = Bytes::from(&ret[..]).pack();
             let script = packed::Script::new_builder()
                 .code_hash(TYPE_ID_CODE_HASH.pack())
-                .hash_type(ScriptHashType::Type.pack())
+                .hash_type(ScriptHashType::Type.into())
                 .args(vec![script_arg].pack())
                 .build();
             Some(script)

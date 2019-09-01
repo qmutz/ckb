@@ -666,7 +666,7 @@ mod tests {
         let (store, chain, shared) = setup("get_live_cells");
         let script1 = ScriptBuilder::default()
             .code_hash(CODE_HASH_DAO.pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
         let script2 = Script::default();
         store.insert_lock_hash(&script1.calc_script_hash(), None);
@@ -837,7 +837,7 @@ mod tests {
         let (store, chain, shared) = setup("get_transactions");
         let script1 = ScriptBuilder::default()
             .code_hash(CODE_HASH_DAO.pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
         let script2 = Script::default();
         store.insert_lock_hash(&script1.calc_script_hash(), None);
@@ -993,7 +993,7 @@ mod tests {
         let (store, chain, shared) = setup("sync_index_states");
         let script1 = ScriptBuilder::default()
             .code_hash(CODE_HASH_DAO.pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
         let script2 = Script::default();
         store.insert_lock_hash(&script1.calc_script_hash(), None);
@@ -1149,7 +1149,7 @@ mod tests {
         let (store, chain, shared) = setup("consume_txs_in_same_block");
         let script1 = ScriptBuilder::default()
             .code_hash(CODE_HASH_DAO.pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
         let script2 = Script::default();
         store.insert_lock_hash(&script1.calc_script_hash(), None);
@@ -1231,7 +1231,7 @@ mod tests {
         let (store, chain, shared) = setup("detach_blocks");
         let script1 = ScriptBuilder::default()
             .code_hash(CODE_HASH_DAO.pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
         let script2 = Script::default();
         store.insert_lock_hash(&script1.calc_script_hash(), None);

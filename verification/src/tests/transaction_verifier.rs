@@ -102,7 +102,7 @@ pub fn test_skip_dao_capacity_check() {
                     Some(
                         Script::new_builder()
                             .code_hash(CODE_HASH_DAO.pack())
-                            .hash_type(ScriptHashType::Data.pack())
+                            .hash_type(ScriptHashType::Data.into())
                             .build(),
                     )
                     .pack(),

@@ -162,14 +162,14 @@ fn finalize_reward() {
     let bob = ScriptBuilder::default()
         .args(bob_args.into_iter().pack())
         .code_hash(always_success_script.code_hash())
-        .hash_type(ScriptHashType::Data.pack())
+        .hash_type(ScriptHashType::Data.into())
         .build();
 
     let alice_args: Vec<packed::Bytes> = vec![Bytes::from(b"a11ce".to_vec()).pack()];
     let alice = ScriptBuilder::default()
         .args(alice_args.into_iter().pack())
         .code_hash(always_success_script.code_hash())
-        .hash_type(ScriptHashType::Data.pack())
+        .hash_type(ScriptHashType::Data.into())
         .build();
 
     for i in 1..23 {

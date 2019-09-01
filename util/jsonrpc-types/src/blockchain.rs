@@ -4,6 +4,7 @@ use crate::{
 };
 use ckb_types::{core, packed, prelude::*, H256, U256};
 use serde_derive::{Deserialize, Serialize};
+use std::convert::TryFrom;
 use std::fmt;
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq, Hash, Debug)]
@@ -64,7 +65,7 @@ impl From<Script> for packed::Script {
         packed::Script::new_builder()
             .args(args.into_iter().map(Into::into).pack())
             .code_hash(code_hash.pack())
-            .hash_type(hash_type.pack())
+            .hash_type(hash_type.into())
             .build()
     }
 }
@@ -74,7 +75,9 @@ impl From<packed::Script> for Script {
         Script {
             code_hash: input.code_hash().unpack(),
             args: input.args().into_iter().map(Into::into).collect(),
-            hash_type: input.hash_type().unpack().into(),
+            hash_type: core::ScriptHashType::try_from(input.hash_type())
+                .expect("checked data")
+                .into(),
         }
     }
 }
@@ -232,7 +235,9 @@ impl From<packed::CellDep> for CellDep {
     fn from(input: packed::CellDep) -> Self {
         CellDep {
             out_point: input.out_point().into(),
-            dep_type: input.dep_type().unpack().into(),
+            dep_type: core::DepType::try_from(input.dep_type())
+                .expect("checked data")
+                .into(),
         }
     }
 }
@@ -246,7 +251,7 @@ impl From<CellDep> for packed::CellDep {
         let dep_type: core::DepType = dep_type.into();
         packed::CellDep::new_builder()
             .out_point(out_point.into())
-            .dep_type(dep_type.pack())
+            .dep_type(dep_type.into())
             .build()
     }
 }
@@ -708,7 +713,7 @@ mod tests {
         packed::ScriptBuilder::default()
             .code_hash(Byte32::zero())
             .args(vec![arg].pack())
-            .hash_type(core::ScriptHashType::Data.pack())
+            .hash_type(core::ScriptHashType::Data.into())
             .build()
     }
 

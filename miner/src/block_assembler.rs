@@ -329,7 +329,7 @@ impl BlockAssembler {
         let cellbase_lock = Script::new_builder()
             .args(cellbase_lock_args.pack())
             .code_hash(self.config.code_hash.pack())
-            .hash_type(hash_type.pack())
+            .hash_type(hash_type.into())
             .build();
 
         let cellbase = self.build_cellbase(&snapshot, &tip_header, cellbase_lock)?;

@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::convert::TryFrom;
 
 use crate::{
     core::{self, BlockNumber, ScriptHashType},
@@ -77,8 +76,7 @@ impl packed::CellInput {
 impl packed::Script {
     pub fn into_witness(self) -> packed::Witness {
         let mut code_hash_and_hash_type = self.code_hash().as_slice().to_vec();
-        let hash_type: ScriptHashType = self.hash_type().unpack();
-        code_hash_and_hash_type.push(hash_type as u8);
+        code_hash_and_hash_type.push(self.hash_type());
         packed::Witness::new_builder()
             .push((&code_hash_and_hash_type[..]).pack())
             .extend(self.args().into_iter())
@@ -93,12 +91,13 @@ impl packed::Script {
             if len == 33 {
                 let code_hash = H256::from_slice(&first.raw_data()[..(len - 1)])
                     .expect("impossible: fail to create H256 from slice");
-                if let Ok(hash_type) = ScriptHashType::try_from(first.raw_data()[len - 1]) {
+                let hash_type = first.raw_data()[len - 1];
+                if ScriptHashType::verify_value(hash_type) {
                     let args = packed::BytesVec::new_builder().extend(args).build();
                     let script = packed::Script::new_builder()
                         .code_hash(code_hash.pack())
                         .args(args)
-                        .hash_type(hash_type.pack())
+                        .hash_type(hash_type)
                         .build();
                     Some(script)
                 } else {

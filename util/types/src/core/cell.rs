@@ -327,7 +327,7 @@ pub fn get_related_dep_out_points<F: Fn(&OutPoint) -> Option<Bytes>>(
         Vec::with_capacity(tx.cell_deps().len()),
         |mut out_points, dep| {
             let out_point = dep.out_point();
-            if dep.dep_type().unpack() == DepType::DepGroup {
+            if dep.dep_type() == DepType::DepGroup.into() {
                 let data = get_cell_data(&out_point)
                     .ok_or_else(|| String::from("Can not get cell data"))?;
                 let sub_out_points =
@@ -434,7 +434,7 @@ pub fn resolve_transaction<'a, CP: CellProvider, HC: HeaderChecker, S: BuildHash
     }
 
     for cell_dep in transaction.cell_deps_iter() {
-        if cell_dep.dep_type().unpack() == DepType::DepGroup {
+        if cell_dep.dep_type() == DepType::DepGroup.into() {
             if let Some((dep_group, cell_deps)) =
                 resolve_dep_group(&cell_dep.out_point(), &mut resolve_cell)?
             {
@@ -617,7 +617,7 @@ mod tests {
 
         let dep = CellDep::new_builder()
             .out_point(op_dep)
-            .dep_type(DepType::DepGroup.pack())
+            .dep_type(DepType::DepGroup.into())
             .build();
 
         let transaction = TransactionBuilder::default().cell_dep(dep).build();
@@ -650,7 +650,7 @@ mod tests {
 
         let dep = CellDep::new_builder()
             .out_point(op_dep.clone())
-            .dep_type(DepType::DepGroup.pack())
+            .dep_type(DepType::DepGroup.into())
             .build();
 
         let transaction = TransactionBuilder::default().cell_dep(dep).build();
@@ -682,7 +682,7 @@ mod tests {
 
         let dep = CellDep::new_builder()
             .out_point(op_dep.clone())
-            .dep_type(DepType::DepGroup.pack())
+            .dep_type(DepType::DepGroup.into())
             .build();
 
         let transaction = TransactionBuilder::default().cell_dep(dep).build();

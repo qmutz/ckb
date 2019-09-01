@@ -25,6 +25,7 @@ use ckb_types::{
 use ckb_verification::{HeaderResolverWrapper, HeaderVerifier, Verifier};
 use criterion::{criterion_group, Criterion};
 use rand::random;
+use std::convert::TryFrom;
 use std::sync::Arc;
 
 #[cfg(not(feature = "ci"))]
@@ -40,7 +41,8 @@ fn block_assembler_config() -> BlockAssemblerConfig {
         .into_iter()
         .map(|bytes| JsonBytes::from_bytes(bytes.unpack()))
         .collect();
-    let hash_type: ScriptHashType = secp_script.hash_type().unpack();
+    let hash_type: ScriptHashType =
+        ScriptHashType::try_from(secp_script.hash_type()).expect("checked data");
 
     BlockAssemblerConfig {
         code_hash: secp_script.code_hash().unpack(),

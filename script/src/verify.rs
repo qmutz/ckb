@@ -24,6 +24,7 @@ use ckb_vm::{
 };
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::convert::TryFrom;
 
 #[cfg(all(unix, target_pointer_width = "64"))]
 use crate::Runner;
@@ -251,7 +252,7 @@ impl<'a, DL: DataLoader> TransactionScriptsVerifier<'a, DL> {
 
     // Extracts actual script binary either in dep cells.
     fn extract_script(&self, script: &'a Script) -> Result<Bytes, ScriptError> {
-        match script.hash_type().unpack() {
+        match ScriptHashType::try_from(script.hash_type()).expect("checked data") {
             ScriptHashType::Data => {
                 if let Some(data) = self.binaries_by_data_hash.get(&script.code_hash()) {
                     Ok(data.to_owned())
@@ -323,7 +324,7 @@ impl<'a, DL: DataLoader> TransactionScriptsVerifier<'a, DL> {
         max_cycles: Cycle,
     ) -> Result<Cycle, ScriptError> {
         if group.script.code_hash() == TYPE_ID_CODE_HASH.pack()
-            && group.script.hash_type().unpack() == ScriptHashType::Type
+            && group.script.hash_type() == Into::<u8>::into(ScriptHashType::Type)
         {
             let verifier = TypeIdSystemScript {
                 rtx: self.rtx,
@@ -656,7 +657,7 @@ mod tests {
         let script = Script::new_builder()
             .args(args.pack())
             .code_hash(code_hash.pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
         let input = CellInput::new(OutPoint::null(), 0);
 
@@ -739,7 +740,7 @@ mod tests {
         let script = Script::new_builder()
             .args(args.pack())
             .code_hash(code_hash.pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
         let input = CellInput::new(OutPoint::null(), 0);
 
@@ -800,7 +801,7 @@ mod tests {
                 Some(
                     Script::new_builder()
                         .code_hash(h256!("0x123456abcd90").pack())
-                        .hash_type(ScriptHashType::Data.pack())
+                        .hash_type(ScriptHashType::Data.into())
                         .build(),
                 )
                 .pack(),
@@ -815,7 +816,7 @@ mod tests {
         let script = Script::new_builder()
             .args(args.pack())
             .code_hash(type_hash)
-            .hash_type(ScriptHashType::Type.pack())
+            .hash_type(ScriptHashType::Type.into())
             .build();
         let input = CellInput::new(OutPoint::null(), 0);
 
@@ -873,7 +874,7 @@ mod tests {
                 Some(
                     Script::new_builder()
                         .code_hash(h256!("0x123456abcd90").pack())
-                        .hash_type(ScriptHashType::Data.pack())
+                        .hash_type(ScriptHashType::Data.into())
                         .build(),
                 )
                 .pack(),
@@ -895,7 +896,7 @@ mod tests {
                 Some(
                     Script::new_builder()
                         .code_hash(h256!("0x123456abcd90").pack())
-                        .hash_type(ScriptHashType::Data.pack())
+                        .hash_type(ScriptHashType::Data.into())
                         .build(),
                 )
                 .pack(),
@@ -909,7 +910,7 @@ mod tests {
         let script = Script::new_builder()
             .args(args.pack())
             .code_hash(type_hash)
-            .hash_type(ScriptHashType::Type.pack())
+            .hash_type(ScriptHashType::Type.into())
             .build();
         let input = CellInput::new(OutPoint::null(), 0);
 
@@ -991,7 +992,7 @@ mod tests {
         let script = Script::new_builder()
             .args(args.pack())
             .code_hash(code_hash.pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
         let input = CellInput::new(OutPoint::null(), 0);
 
@@ -1058,7 +1059,7 @@ mod tests {
         let script = Script::new_builder()
             .args(args.pack())
             .code_hash(code_hash.pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
         let input = CellInput::new(OutPoint::null(), 0);
 
@@ -1115,7 +1116,7 @@ mod tests {
         let script = Script::new_builder()
             .args(args.pack())
             .code_hash(blake2b_256(&buffer).pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
         let input = CellInput::new(OutPoint::null(), 0);
 
@@ -1184,13 +1185,13 @@ mod tests {
         let script = Script::new_builder()
             .args(args.pack())
             .code_hash(blake2b_256(&buffer).pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
         let output_data = Bytes::default();
         let output = CellOutputBuilder::default()
             .lock(
                 Script::new_builder()
-                    .hash_type(ScriptHashType::Data.pack())
+                    .hash_type(ScriptHashType::Data.into())
                     .build(),
             )
             .type_(Some(script).pack())
@@ -1270,7 +1271,7 @@ mod tests {
         let script = Script::new_builder()
             .args(args.pack())
             .code_hash(blake2b_256(&buffer).pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
         let output = CellOutputBuilder::default()
             .type_(Some(script).pack())
@@ -1335,7 +1336,7 @@ mod tests {
         let script = Script::new_builder()
             .args(args.pack())
             .code_hash(blake2b_256(&buffer).pack())
-            .hash_type(ScriptHashType::Data.pack())
+            .hash_type(ScriptHashType::Data.into())
             .build();
 
         let dep_out_point = OutPoint::new(h256!("0x123").pack(), 8);
@@ -1392,7 +1393,7 @@ mod tests {
         let type_id_script = Script::new_builder()
             .args(vec![Bytes::from(h256!("0x1111").as_ref())].pack())
             .code_hash(TYPE_ID_CODE_HASH.pack())
-            .hash_type(ScriptHashType::Type.pack())
+            .hash_type(ScriptHashType::Type.into())
             .build();
 
         let input = CellInput::new(OutPoint::new(h256!("0x1234").pack(), 8), 0);
@@ -1455,7 +1456,7 @@ mod tests {
         let type_id_script = Script::new_builder()
             .args(vec![Bytes::from(h256!("0x1111").as_ref())].pack())
             .code_hash(TYPE_ID_CODE_HASH.pack())
-            .hash_type(ScriptHashType::Type.pack())
+            .hash_type(ScriptHashType::Type.into())
             .build();
 
         let input = CellInput::new(OutPoint::new(h256!("0x1234").pack(), 8), 0);
@@ -1536,7 +1537,7 @@ mod tests {
         let type_id_script = Script::new_builder()
             .args(vec![input_hash].pack())
             .code_hash(TYPE_ID_CODE_HASH.pack())
-            .hash_type(ScriptHashType::Type.pack())
+            .hash_type(ScriptHashType::Type.into())
             .build();
 
         let output_cell = CellOutputBuilder::default()
@@ -1592,7 +1593,7 @@ mod tests {
         let type_id_script = Script::new_builder()
             .args(vec![Bytes::from(h256!("0x1111").as_ref())].pack())
             .code_hash(TYPE_ID_CODE_HASH.pack())
-            .hash_type(ScriptHashType::Type.pack())
+            .hash_type(ScriptHashType::Type.into())
             .build();
 
         let input = CellInput::new(OutPoint::new(h256!("0x1234").pack(), 8), 0);
@@ -1675,7 +1676,7 @@ mod tests {
         let type_id_script = Script::new_builder()
             .args(vec![input_hash].pack())
             .code_hash(TYPE_ID_CODE_HASH.pack())
-            .hash_type(ScriptHashType::Type.pack())
+            .hash_type(ScriptHashType::Type.into())
             .build();
 
         let output_cell = CellOutputBuilder::default()
@@ -1758,7 +1759,7 @@ mod tests {
         let type_id_script = Script::new_builder()
             .args(vec![input_hash].pack())
             .code_hash(TYPE_ID_CODE_HASH.pack())
-            .hash_type(ScriptHashType::Type.pack())
+            .hash_type(ScriptHashType::Type.into())
             .build();
 
         let output_cell = CellOutputBuilder::default()
@@ -1817,7 +1818,7 @@ mod tests {
         let type_id_script = Script::new_builder()
             .args(vec![Bytes::from(h256!("0x1111").as_ref())].pack())
             .code_hash(TYPE_ID_CODE_HASH.pack())
-            .hash_type(ScriptHashType::Type.pack())
+            .hash_type(ScriptHashType::Type.into())
             .build();
 
         let input = CellInput::new(OutPoint::new(h256!("0x1234").pack(), 8), 0);
