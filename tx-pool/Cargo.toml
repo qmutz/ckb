@@ -25,7 +25,7 @@ ckb-chain-spec = { path = "../spec" }
 ckb-snapshot = { path = "../util/snapshot" }
 ckb-error = { path = "../error" }
 futures = "0.1"
-tokio = "0.1"
+tokio = "1.8"
 crossbeam-channel = "0.3"
 ckb-future-executor = { path = "../util/future-executor" }
 ckb-stop-handler = { path = "../util/stop-handler" }

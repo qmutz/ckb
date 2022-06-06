@@ -21,7 +21,7 @@ ckb-reward-calculator= { path = "../util/reward-calculator" }
 failure = "0.1.5"
 ckb-error = { path = "../error" }
 enum-display-derive = "0.1.0"
-tokio = "0.1"
+tokio = "1.8"
 futures = "0.1"
 crossbeam-channel = "0.3"
 ckb-future-executor = { path = "../util/future-executor" }
