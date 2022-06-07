@@ -15,7 +15,7 @@ ckb-logger = { path = "../util/logger" }
 ckb-proposal-table = { path = "../util/proposal-table" }
 # DO NOT UPDATE "im", until clippy#4121 be solved
 # https://github.com/rust-lang/rust-clippy/issues/4121
-im = "~12.3"
+im = "~15.1"
 arc-swap = "0.4"
 ckb-error = { path = "../error" }
 ckb-snapshot = { path = "../util/snapshot" }
